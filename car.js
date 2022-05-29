@@ -12,16 +12,63 @@ class Car {
         this.friction = 0.05;
         // Rotazione della macchina
         this.angle = 0;
+        // Danni
+        this.damaged = false;
 
         // Sensori
         this.sensor=new Sensor(this);
         // Event listener frecce
-        this.controls = new Controls();
+        this.controls=new Controls();
     }
 
     update(roadBorders) {
-        this.#move();
+        // Impedisce all'auto di muoversi se è danneggiata;
+        if(!this.damaged){
+            this.#move();
+            this.polygon=this.#createPolygon();
+            this.damaged=this.#assessDamage(roadBorders);
+        }
         this.sensor.update(roadBorders);
+    }
+
+    // Metodo per la rilevazione di una collissione e memorizzazione dei "danni"
+    #assessDamage(roadBorders) {
+        for(let i=0;i<roadBorders.length;i++){
+            if(polysIntersect(this.polygon,roadBorders[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Metodo per generare l'auto con angoli definiti
+    #createPolygon() {
+        const points=[];
+
+        //! Angoli dell'auto
+        // Ipotenusa del triangolo rettangolo, conoscendo altezza e larghezza dell'auto
+        const rad=Math.hypot(this.width,this.height)/2;
+        // Tangente del triangolo rettangolo
+        const alpha=Math.atan2(this.width,this.height);
+        
+        points.push({
+            x:this.x-Math.sin(this.angle-alpha)*rad,
+            y:this.y-Math.cos(this.angle-alpha)*rad
+        });
+        points.push({
+            x:this.x-Math.sin(this.angle+alpha)*rad,
+            y:this.y-Math.cos(this.angle+alpha)*rad
+        });
+        points.push({
+            x:this.x-Math.sin(Math.PI+this.angle-alpha)*rad,
+            y:this.y-Math.cos(Math.PI+this.angle-alpha)*rad
+        });
+        points.push({
+            x:this.x-Math.sin(Math.PI+this.angle+alpha)*rad,
+            y:this.y-Math.cos(Math.PI+this.angle+alpha)*rad
+        });
+
+        return points;
     }
 
     // Muove la macchina nel canvas
@@ -74,20 +121,36 @@ class Car {
 
     // Disegna la macchina nel canvas
     draw(ctx) {
-        ctx.save();
-        // Ruota la macchina
-        ctx.translate(this.x,this.y);
-        ctx.rotate(-this.angle)
+        // // Disegna un rettangolo come "auto"
+        // ctx.save();
+        // // Ruota la macchina
+        // ctx.translate(this.x,this.y);
+        // ctx.rotate(-this.angle)
 
+        // ctx.beginPath();
+        // ctx.rect(
+        //     -this.width/2,
+        //     -this.height/2,
+        //     this.width,
+        //     this.height
+        // );
+        // ctx.fill();  
+        // ctx.restore();     
+
+        // Verifica se l'auto è danneggiata
+        if(this.damaged){
+            ctx.fillStyle="red";
+        }else{
+            ctx.fillStyle="black";
+        }
+
+        // Disegna l'auto come poligono
         ctx.beginPath();
-        ctx.rect(
-            -this.width/2,
-            -this.height/2,
-            this.width,
-            this.height
-        );
-        ctx.fill();  
-        ctx.restore();     
+        ctx.moveTo(this.polygon[0].x,this.polygon[0].y);
+        for(let i=1;i<this.polygon.length;i++){
+            ctx.lineTo(this.polygon[i].x,this.polygon[i].y);
+        }
+        ctx.fill();
         
         // Disegna i sensori
         this.sensor.draw(ctx);
