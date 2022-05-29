@@ -13,12 +13,15 @@ class Car {
         // Rotazione della macchina
         this.angle = 0;
 
+        // Sensori
+        this.sensor=new Sensor(this);
         // Event listener frecce
         this.controls = new Controls();
     }
 
-    update() {
+    update(roadBorders) {
         this.#move();
+        this.sensor.update(roadBorders);
     }
 
     // Muove la macchina nel canvas
@@ -84,6 +87,9 @@ class Car {
             this.height
         );
         ctx.fill();  
-        ctx.restore();      
+        ctx.restore();     
+        
+        // Disegna i sensori
+        this.sensor.draw(ctx);
     }
 }

@@ -10,10 +10,17 @@ const car = new Car(road.getLaneCenter(2),100,30,50);
 animate();
 
 function animate() {
-    car.update();
+    car.update(road.borders);
     canvas.height = window.innerHeight;
+
+    // Movimento della strada;
+    ctx.save();
+    ctx.translate(0,-car.y+canvas.height*0.7);
+
     road.draw(ctx);
     car.draw(ctx);
+
+    ctx.restore();
     // Richiama il metodo "animate" ripetutamente, dando l'illusione di movimento
     requestAnimationFrame(animate);
 }
